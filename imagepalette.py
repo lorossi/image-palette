@@ -137,31 +137,31 @@ class PaletteExtractor:
         image_dx = int((new_width - self._im.width) / 2)
         image_dy = int((new_height - self._im.height) / 2)
 
-        # bar sizes calculation
-        palette_width = int(new_width * palette_width_scl)
-        palette_height = int(new_height * palette_height_scl)
-        slice_height = int(palette_height / self._selected_colors)
-        bar_height = int(slice_height * 0.75)
-        bar_width = int(palette_width * 0.5)
-        # displacement
-        bars_dx = int((palette_width - bar_width) / 2)
-        bars_dy = int((slice_height - bar_height) / 2)
-
-        logging.info("Starting palette incorporation")
-        bars = Image.new('RGB', (palette_width, palette_height), color=background_color)
-        draw = ImageDraw.Draw(bars)
-        # draw each bar
-        i = 0
-        for c in self._colors:
-            x_0 = bars_dx
-            y_0 = i * slice_height + bars_dy
-            x_1 = x_0 + bar_width
-            y_1 = y_0 + bar_height
-            fill = c.rgb
-            draw.rectangle([x_0, y_0, x_1, y_1], fill=fill)
-            i += 1
-
         if position == "l" or position == "r":
+            # bar sizes calculation
+            palette_width = int(new_width * palette_width_scl)
+            palette_height = int(new_height * palette_height_scl)
+            slice_height = int(palette_height / self._selected_colors)
+            bar_height = int(slice_height * 0.75)
+            bar_width = int(palette_width * 0.5)
+            # displacement
+            bars_dx = int((palette_width - bar_width) / 2)
+            bars_dy = int((slice_height - bar_height) / 2)
+
+            logging.info("Starting palette incorporation")
+            bars = Image.new('RGB', (palette_width, palette_height), color=background_color)
+            draw = ImageDraw.Draw(bars)
+            # draw each bar
+            i = 0
+            for c in self._colors:
+                x_0 = bars_dx
+                y_0 = i * slice_height + bars_dy
+                x_1 = x_0 + bar_width
+                y_1 = y_0 + bar_height
+                fill = c.rgb
+                draw.rectangle([x_0, y_0, x_1, y_1], fill=fill)
+                i += 1
+
             # left or right
             self._incorporated_palette = Image.new('RGB', (new_width + palette_width, new_height), color=background_color)
             palette_dy = int((new_height - palette_height) / 2)
@@ -174,19 +174,40 @@ class PaletteExtractor:
                 self._incorporated_palette.paste(bars, (new_width - palette_width + palette_dx + image_dx, palette_dy))
 
         if position == "t" or position == "b":
-            # top or bottom
-            bars = bars.rotate(90, expand=True)
-            # the bars image has been rotated, now its height and wdth are
-            # switched around
-            self._incorporated_palette = Image.new('RGB', (new_width, new_height + palette_width), color=background_color)
-            palette_dx = int((new_width - palette_height) / 2)
+            # bar sizes calculation
+            palette_width = int(new_width * palette_width_scl)
+            palette_height = int(new_height * palette_height_scl)
+            slice_width = int(palette_width / self._selected_colors)
+            bar_width = int(slice_width * 0.75)
+            bar_height = int(palette_height * 0.5)
+
+            # displacement
+            bars_dx = int((slice_width - bar_width) / 2)
+            bars_dy = int((palette_height - bar_height) / 2)
+
+            logging.info("Starting palette incorporation")
+            bars = Image.new('RGB', (palette_width, palette_height), color=background_color)
+            draw = ImageDraw.Draw(bars)
+            # draw each bar
+            i = 0
+            for c in self._colors:
+                x_0 = i * slice_width + bars_dx
+                y_0 = bars_dy
+                x_1 = x_0 + bar_width
+                y_1 = y_0 + bar_height
+                fill = c.rgb
+                draw.rectangle([x_0, y_0, x_1, y_1], fill=fill)
+                i += 1
+
+            self._incorporated_palette = Image.new('RGB', (new_width, new_height + palette_height), color=background_color)
+            palette_dx = int((new_width - palette_width) / 2)
             palette_dy = int(0.5 * image_dy)
             if position == "t":
-                self._incorporated_palette.paste(self._im, (image_dx, image_dy + palette_width))
+                self._incorporated_palette.paste(self._im, (image_dx, image_dy + palette_height))
                 self._incorporated_palette.paste(bars, (palette_dx, palette_dy))
             elif position == "b":
                 self._incorporated_palette.paste(self._im, (image_dx, image_dy))
-                self._incorporated_palette.paste(bars, (palette_dx, new_height - palette_width + image_dy + 2 * palette_dy))
+                self._incorporated_palette.paste(bars, (palette_dx, new_height - palette_height + image_dy + palette_dy))
 
         logging.info("Palette incorporated")
 

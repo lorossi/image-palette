@@ -4,7 +4,7 @@ from imagepalette import PaletteExtractor
 
 
 def main():
-    path = Path(".").glob('DSC_*.jpg')
+    path = Path(".").glob('DSC*jpg')
     photos = [str(x) for x in path if x.is_file()]
 
     print(f"Starting extraction of {len(photos)} photos")
@@ -13,17 +13,16 @@ def main():
         im = Image.open(photo)
         width, height = im.size
 
-        ratio = width / height
         p = PaletteExtractor()
         p.loadImage(photo, selected_colors=5, resize=True)
         p.extractColors()
 
         if width > height:
             # horizontal image
-            p.incorporatePalette(output_scl=0.8, palette_height_scl=0.8, palette_width_scl=0.1, position="r")
+            p.incorporatePalette(output_scl=0.9, palette_height_scl=0.9, palette_width_scl=0.1, position="r", background_color=(220, 220, 220))
         else:
             # vertical image
-            p.incorporatePalette(output_scl=0.8, palette_height_scl=0.55, palette_width_scl=0.15, position="b")
+            p.incorporatePalette(output_scl=0.9, palette_height_scl=0.9, palette_width_scl=0.1, position="b", background_color=(220, 220, 220))
 
         p.saveIncorporatedPalette()
         print(f"{photo} done. {i+1}/{len(photos)}.")

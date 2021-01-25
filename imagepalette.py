@@ -1,3 +1,5 @@
+# Lorenzo Rossi - www.lorenzoros.si - https://github.com/lorossi
+
 from sklearn.cluster import KMeans
 from PIL import Image, ImageDraw
 import json
@@ -140,7 +142,7 @@ class PaletteExtractor:
         palette_height = int(new_height * palette_height_scl)
         slice_height = int(palette_height / self._selected_colors)
         bar_height = int(slice_height * 0.75)
-        bar_width = int(palette_width * 0.35)
+        bar_width = int(palette_width * 0.5)
         # displacement
         bars_dx = int((palette_width - bar_width) / 2)
         bars_dy = int((slice_height - bar_height) / 2)
@@ -162,15 +164,14 @@ class PaletteExtractor:
         if position == "l" or position == "r":
             # left or right
             self._incorporated_palette = Image.new('RGB', (new_width + palette_width, new_height), color=background_color)
-            palette_dx = int(palette_width / 2)
             palette_dy = int((new_height - palette_height) / 2)
-
+            palette_dx = int(0.5 * image_dx)
             if position == "l":
-                self._incorporated_palette.paste(self._im, (palette_dx + image_dx, image_dy))
-                self._incorporated_palette.paste(bars, (0, palette_dy))
+                self._incorporated_palette.paste(self._im, (palette_width + image_dx, image_dy))
+                self._incorporated_palette.paste(bars, (palette_dx, palette_dy))
             elif position == "r":
                 self._incorporated_palette.paste(self._im, (image_dx, image_dy))
-                self._incorporated_palette.paste(bars, (new_width - palette_width + palette_dx, palette_dy))
+                self._incorporated_palette.paste(bars, (new_width - palette_width + palette_dx + image_dx, palette_dy))
 
         if position == "t" or position == "b":
             # top or bottom
@@ -179,14 +180,13 @@ class PaletteExtractor:
             # switched around
             self._incorporated_palette = Image.new('RGB', (new_width, new_height + palette_width), color=background_color)
             palette_dx = int((new_width - palette_height) / 2)
-            palette_dy = int(palette_width / 2)
-
+            palette_dy = int(0.5 * image_dy)
             if position == "t":
-                self._incorporated_palette.paste(self._im, (image_dx, image_dy + palette_dy))
-                self._incorporated_palette.paste(bars, (palette_dx, 0))
+                self._incorporated_palette.paste(self._im, (image_dx, image_dy + palette_width))
+                self._incorporated_palette.paste(bars, (palette_dx, palette_dy))
             elif position == "b":
                 self._incorporated_palette.paste(self._im, (image_dx, image_dy))
-                self._incorporated_palette.paste(bars, (palette_dx, new_height - palette_width + palette_dy))
+                self._incorporated_palette.paste(bars, (palette_dx, new_height - palette_width + image_dy + 2 * palette_dy))
 
         logging.info("Palette incorporated")
 

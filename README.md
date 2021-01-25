@@ -1,8 +1,10 @@
 # Image Palette
 
-Extract the dominant colors from any image.
+Extract the dominant colors from any image and add the palette to the source image.
 
-**WIP**
+# Examples
+
+# How to use
 
 # License
 

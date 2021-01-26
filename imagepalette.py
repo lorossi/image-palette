@@ -255,7 +255,7 @@ def main():
     parser = argparse.ArgumentParser(description="Extract color palette from any image")
     parser.add_argument("-i", "--input", help="Source image path")
     parser.add_argument("-o", "--output", help="Custom output folder", default="output/")
-    parser.add_argument("-c", "--colors", help="How many colors should be estracted", type=int, default=4)
+    parser.add_argument("-c", "--colors", help="Number of extracted colors", type=int, default=5)
     parser.add_argument("-r", "--resize", help="Resize the image for internal use. Calculations will be quicker but slightly less accurate", action="store_true")
     parser.add_argument("--console", help="Log to console", action="store_true")
     parser.add_argument("--palette", help="Create an image containing the palette", action="store_true")
@@ -267,7 +267,8 @@ def main():
     parser.add_argument("--position", help="Position of the color legend. Valid values: l, r, t, b (for left, right, top, bottom) (valid if used in the incorporated mode). Default: r", type=str, default="r")
     parser.add_argument('--color', help="Backround color of the image. Pass 3 integers in range 0-255 (valid if used in the incorporated mode). Example: 244 34 111. Default 220 220 220", nargs='+', type=int, default=[220, 220, 220])
     parser.add_argument('--outline', help="Outline color of the palette. Pass 3 integers in range 0-255 (valid if used in the incorporated mode). Example: 244 34 111. Default 127 127 127", nargs='+', type=int, default=[127, 127, 127])
-    parser.add_argument('--nooutline', help="Removes the outline of the palette", action="store_true")
+    parser.add_argument('--outlinewidth', help="Width of the oultine of the palette (valid if used in the incorporated mode). Default 1", type=int, default=1)
+    parser.add_argument('--nooutline', help="Removes the outline of the palette (valid if used in the incorporated mode).", action="store_true")
 
     args = parser.parse_args()
 
@@ -286,6 +287,10 @@ def main():
 
     if len(args.outline) > 3 or max(args.outline) > 255 or min(args.outline) < 0:
         print("The outline specified is wrong. Use -h to get a list of commands.")
+        quit()
+
+    if not any(args.position.lower() == p for p in ["l", "r", "t", "b"]):
+        print("The position specified is wrong. Use -h to get a list of commands")
         quit()
 
     if args.console:
@@ -322,7 +327,8 @@ def main():
             outline_color = None
         p.incorporatePalette(output_scl=args.scl, palette_width_scl=args.palettewidth,
                              palette_height_scl=args.paletteheight, position=args.position,
-                             background_color=background_color, outline_color=outline_color)
+                             background_color=background_color, outline_color=outline_color,
+                             line_width=args.outlinewidth)
         p.saveIncorporatedPalette(folder=output_folder)
 
 

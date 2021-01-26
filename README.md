@@ -3,7 +3,7 @@ Extract the dominant colors from any image and either add the palette to the sou
 
 This program uses [k-mean clustering](https://en.wikipedia.org/wiki/K-means_clustering) (provided by scikit) to determine the most prevalent colors. It's quite resources consuming but with a few precautions it can be made faster.
 
-See below for user instructions!
+Look down below for sample images or check my [Instagram profile](https://www.instagram.com/lorossi97/) to see more of my work! If you want to replicate this effect in your own photos, make sure to look below for the instructions.
 
 # Output
 *Input image*

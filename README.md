@@ -60,9 +60,9 @@ By using the command `--resize` (or `-r`) the image will be resized in order to 
 | `-c` `--colors` | Number of extracted colors | ✓ | `5` | `int` |
 | `-r` `--resize` | Resize the image for internal use | ✓ | `none` | `none` |
 | `--console` | Log to console | ✓ | `False` | `none` |
-| `--palette` | Create an image containing the palette | ✓ but one of this group must be selected | `none` | `none` |
-| `--json` | Create a JSON file containing the palette | ✓ but one of this group must be selected | `none` | `none` |
-| `--incorporated` | Incorporate the palette inside the original image | ✓ but one of this group must be selected | `none` | `none` |
+| `--palette` | Create an image containing the palette | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
+| `--json` | Create a JSON file containing the palette | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
+| `--incorporated` | Incorporate the palette inside the original image | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
 | `--scl` | Original image scale (valid if used in the incorporated mode) | ✓ | `0.9` | `float` |
 | `--palettewidth` | Ratio of the palette to the original image (valid if used in the incorporated mode) | ✓ | `0.02` | `float` |
 | `--paletteheight` | Ratio of the palette to the original image (valid if used in the incorporated mode) | ✓ | 0.9` | `float` |

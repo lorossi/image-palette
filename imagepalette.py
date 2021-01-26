@@ -73,10 +73,11 @@ class PaletteExtractor:
         self._colors = []
         self._resized_width = 1000
 
-    def loadImage(self, path, selected_colors=4, resize=False):
-        self._path = path
+    def loadImage(self, path, selected_colors=5, resize=False):
+        # heccing windows
+        self._path = path.replace("\\", "/")
         # removes folder and file extension from filename
-        self._filename = ".".join(path.split("/")[-1].split(".")[:-1])
+        self._filename = ".".join(self._path.split("/")[-1].split(".")[:-1])
         self._selected_colors = selected_colors
         try:
             self._im = Image.open(self._path)
@@ -128,7 +129,8 @@ class PaletteExtractor:
 
     def incorporatePalette(self, output_scl=0.9, palette_width_scl=0.1,
                            palette_height_scl=0.9,
-                           background_color=(220, 220, 220), position="r"):
+                           background_color=(220, 220, 220), outline_color=(127, 127, 127),
+                           line_width=1, position="r"):
         # position can be "l" for left, "r" for right, "t" for top,
         # "b" for bottom
         # image resized
@@ -159,7 +161,8 @@ class PaletteExtractor:
                 x_1 = x_0 + bar_width
                 y_1 = y_0 + bar_height
                 fill = c.rgb
-                draw.rectangle([x_0, y_0, x_1, y_1], fill=fill)
+                draw.rectangle([x_0, y_0, x_1, y_1], fill=fill,
+                               outline=outline_color, width=line_width)
                 i += 1
 
             # left or right
@@ -196,7 +199,8 @@ class PaletteExtractor:
                 x_1 = x_0 + bar_width
                 y_1 = y_0 + bar_height
                 fill = c.rgb
-                draw.rectangle([x_0, y_0, x_1, y_1], fill=fill)
+                draw.rectangle([x_0, y_0, x_1, y_1], fill=fill,
+                               outline=outline_color, width=line_width)
                 i += 1
 
             self._incorporated_palette = Image.new('RGB', (new_width, new_height + palette_height), color=background_color)
@@ -262,6 +266,8 @@ def main():
     parser.add_argument("--paletteheight", help="Ratio of the palette to the original image (valid if used in the incorporated mode). Default: 0.9", type=float, default=0.9)
     parser.add_argument("--position", help="Position of the color legend. Valid values: l, r, t, b (for left, right, top, bottom) (valid if used in the incorporated mode). Default: r", type=str, default="r")
     parser.add_argument('--color', help="Backround color of the image. Pass 3 integers in range 0-255 (valid if used in the incorporated mode). Example: 244 34 111. Default 220 220 220", nargs='+', type=int, default=[220, 220, 220])
+    parser.add_argument('--outline', help="Outline color of the palette. Pass 3 integers in range 0-255 (valid if used in the incorporated mode). Example: 244 34 111. Default 127 127 127", nargs='+', type=int, default=[127, 127, 127])
+    parser.add_argument('--nooutline', help="Removes the outline of the palette", action="store_true")
 
     args = parser.parse_args()
 
@@ -275,7 +281,11 @@ def main():
         quit()
 
     if len(args.color) > 3 or max(args.color) > 255 or min(args.color) < 0:
-        print("The color specified is wrong. Use -h to get a list of commands.")
+        print("The background color specified is wrong. Use -h to get a list of commands.")
+        quit()
+
+    if len(args.outline) > 3 or max(args.outline) > 255 or min(args.outline) < 0:
+        print("The outline specified is wrong. Use -h to get a list of commands.")
         quit()
 
     if args.console:
@@ -306,9 +316,13 @@ def main():
         p.savePaletteJSON()
     if args.incorporated:
         background_color = tuple(args.color)
+        if not args.nooutline:
+            outline_color = tuple(args.outline)
+        else:
+            outline_color = None
         p.incorporatePalette(output_scl=args.scl, palette_width_scl=args.palettewidth,
                              palette_height_scl=args.paletteheight, position=args.position,
-                             background_color=background_color)
+                             background_color=background_color, outline_color=outline_color)
         p.saveIncorporatedPalette(folder=output_folder)
 
 

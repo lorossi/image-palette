@@ -14,17 +14,17 @@ def main():
         width, height = im.size
 
         p = PaletteExtractor()
-        p.loadImage(photo, selected_colors=5, resize=True)
+        p.loadImage(photo, resize=True)
         p.extractColors()
 
         if width > height:
             # horizontal image
-            p.incorporatePalette(output_scl=0.9, palette_height_scl=0.9, palette_width_scl=0.1, position="r", background_color=(220, 220, 220))
+            p.incorporatePalette(output_scl=0.9, palette_height_scl=0.9, palette_width_scl=0.1, position="r")
         else:
             # vertical image
-            p.incorporatePalette(output_scl=0.9, palette_height_scl=0.1, palette_width_scl=0.9, position="b", background_color=(220, 220, 220))
+            p.incorporatePalette(output_scl=0.9, palette_height_scl=0.1, palette_width_scl=0.9, position="b")
 
-        p.saveIncorporatedPalette()
+        p.saveIncorporatedPalette(folder="Editate/")
         print(f"{photo} done. {i+1}/{len(photos)}.")
         i += 1
 

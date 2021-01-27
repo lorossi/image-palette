@@ -13,10 +13,10 @@ Look down below for sample images or check my [Instagram profile](https://www.in
 ![starry-night-color-palette](https://github.com/lorossi/image-palette/blob/master/output/starry-night-palette.png?raw=true)
 
 *Palette integrated in original image*
-![starry-night--with-incorporated-color-palette](https://github.com/lorossi/image-palette/blob/master/output/starry-night-incorporated-palette.png?raw=true)
+![starry-night-with-incorporated-color-palette](https://github.com/lorossi/image-palette/blob/master/output/starry-night-incorporated-palette.png?raw=true)
 
 *Output as seen in the console*
-![starry-night--with-incorporated-color-palette](https://github.com/lorossi/image-palette/blob/master/output/console.png?raw=true)
+![starry-night-with-incorporated-color-palette](https://github.com/lorossi/image-palette/blob/master/output/console.png?raw=true)
 
 *Json file with the color palette*
 

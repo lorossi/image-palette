@@ -15,6 +15,9 @@ Look down below for sample images or check my [Instagram profile](https://www.in
 *Palette integrated in original image*
 ![starry-night--with-incorporated-color-palette](https://github.com/lorossi/image-palette/blob/master/output/starry-night-incorporated-palette.png?raw=true)
 
+*Output as seen in the console*
+![starry-night--with-incorporated-color-palette](https://github.com/lorossi/image-palette/blob/master/output/console.png?raw=true)
+
 *Json file with the color palette*
 
 *Filename* `starry-night-json-palette.json`
@@ -23,21 +26,28 @@ Look down below for sample images or check my [Instagram profile](https://www.in
 
 ```
 {
-  "rgb":[
-    [165,174,147],
-    [107,132,155],
-    [25,29,33],
-    [66,90,137],
-    [47,60,87]
+  "rgb": [
+    [168, 177, 152],
+    [110, 134, 156],
+    [23, 28, 33],
+    [69, 93, 137],
+    [47, 60, 89 ]
   ],
-  "hsv":[
-    [79,15,68],
-    [208,30,60],
-    [210,24,12],
-    [219,51,53],
-    [220,45,34]
-    ]
-  }
+  "hsv": [
+    [81, 14, 69],
+    [208, 29, 61],
+    [210, 30, 12],
+    [218, 49, 53],
+    [221, 47, 34]
+  ],
+  "hex": [
+    "#A8B198",
+    "#6E869C",
+    "#171C21",
+    "#455D89",
+    "#2F3C59"
+  ]
+}
 ```
 
 
@@ -61,6 +71,7 @@ By using the command `--resize` (or `-r`) the image will be resized in order to 
 | `-r` `--resize` | Resize the image for internal use | ✓ | `none` | `none` |
 | `--console` | Log to console | ✓ | `False` | `none` |
 | `--palette` | Create an image containing the palette | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
+| `--printpalette` | Print the palette in the console | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
 | `--json` | Create a JSON file containing the palette | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
 | `--incorporated` | Incorporate the palette inside the original image | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
 | `--scl` | Original image scale (valid if used in the incorporated mode) | ✓ | `0.9` | `float` |
@@ -74,6 +85,7 @@ By using the command `--resize` (or `-r`) the image will be resized in order to 
 
 ## Examples
 - Generate a 4 colors palette of the image "image-1.png" and save it as a new image file: `python3 imagepalette.py -i image-1.png -c 4 --palette`
+- Generate a 4 colors palette of the image "image-1.png" and print it in the console: `python3 imagepalette.py -i image-1.png -c 4 --printpalette`
 - Generate a 8 color palette of the image "image-1.png" and save it as a JSON file: `python3 imagepalette.py -i image-1.png -c 8 --json`
 - Generate a 5 colors palette of the image "image-1.png" and incorporate it in the source image: `python3 imagepalette.py -i image-1.png -c 5 --incorporated`
     - The arguments `--palettewidth`, `--paletteheight`, `--scl`, `--position`, `--color`, `--outline`, `--nooutline` can be used to further customize the output image

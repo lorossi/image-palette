@@ -1,11 +1,13 @@
 # Lorenzo Rossi - www.lorenzoros.si - https://github.com/lorossi
+# dreaming of better days
 
-from sklearn.cluster import KMeans
-from PIL import Image, ImageDraw
 import json
 import logging
 import pathlib
 import argparse
+from PIL import Image, ImageDraw
+from colr import color
+from sklearn.cluster import KMeans
 
 
 class Color:
@@ -53,6 +55,10 @@ class Color:
     @property
     def hsv(self):
         return tuple(self._hsv)
+
+    @property
+    def hsv_formatted(self):
+        return f"({self._hsv[0]}°, {self._hsv[1]}%, {self._hsv[2]}%)"
 
     @property
     def hue(self):
@@ -215,6 +221,39 @@ class PaletteExtractor:
 
         logging.info("Palette incorporated")
 
+    def printPalette(self):
+        # print the palette in the console
+        bar_width = 16
+        max_rgb = max(len(str(c.rgb)) for c in self._colors)
+        max_hsv = max(len(str(c.hsv_formatted)) for c in self._colors)
+        max_hex = max(len(str(c.hex)) for c in self._colors)
+
+        separator = " | "
+        line_width = bar_width + max_rgb + max_hsv + max_hex + len(separator) * 6 + 1
+        line_color = "lightgrey"
+        print("\n", color("Extracted color palette:", fore=line_color), "\n")
+        print(" ", color("-" * line_width, fore=line_color), sep="")
+        for c in self._colors:
+            rgb = c.rgb
+            hsv = c.hsv_formatted
+            hex = c.hex
+
+            spacing_rgb = max_rgb - len(str(rgb))
+            spacing_hsv = max_hsv - len(str(hsv))
+
+            print(color(" | ", fore=line_color), end="")
+            print(color(" " * bar_width, back=rgb), sep=" ", end="")
+            print(color(separator, fore=line_color), end="")
+            print(f"rgb{rgb}{spacing_rgb * ' '}", end="")
+            print(color(separator, fore=line_color), end="")
+            print(f"hsv{hsv}{spacing_hsv * ' '}", end="")
+            print(color(separator, fore=line_color), end="")
+            print(f"{hex}", end="")
+
+
+            print(color(" |", fore=line_color))
+        print(" ", color("-" * line_width, fore=line_color), "\n", sep="")
+
     def crateFolder(self, path):
         pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
@@ -238,12 +277,14 @@ class PaletteExtractor:
 
         json_dict = {
             "rgb": [],
-            "hsv": []
+            "hsv": [],
+            "hex": []
         }
 
         for c in self._colors:
             json_dict["rgb"].append(c.rgb)
             json_dict["hsv"].append(c.hsv)
+            json_dict["hex"].append(c.hex)
 
         path = f"{folder}{self._filename}-json-palette.json"
         with open(path, "w") as json_file:
@@ -259,6 +300,7 @@ def main():
     parser.add_argument("-r", "--resize", help="Resize the image for internal use. Calculations will be quicker but slightly less accurate", action="store_true")
     parser.add_argument("--console", help="Log to console", action="store_true")
     parser.add_argument("--palette", help="Create an image containing the palette", action="store_true")
+    parser.add_argument("--printpalette", help="Print the palette in the console", action="store_true")
     parser.add_argument("--json", help="Create a JSON file containing the palette", action="store_true")
     parser.add_argument("--incorporated", help="Incorporate the palette inside the original image", action="store_true")
     parser.add_argument("--scl", help="Original image scale (valid if used in the incorporated mode). Default: 0.9", type=float, default=0.9)
@@ -277,8 +319,8 @@ def main():
         print("Specify the input image. Use -h to get a list of commands.")
         quit()
 
-    if not args.palette and not args.json and not args.incorporated:
-        print("Specify the type of output (Palette, Incorporated, JSON). Use -h to get a list of commands.")
+    if not args.printpalette and not args.palette and not args.json and not args.incorporated:
+        print("Specify the type of output (Palette, Printpalette, Incorporated, JSON). Use -h to get a list of commands.")
         quit()
 
     if len(args.color) > 3 or max(args.color) > 255 or min(args.color) < 0:
@@ -301,7 +343,7 @@ def main():
         logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                             level=logging.INFO, filename=logfile,
                             filemode="w+")
-        print(f"Logging in {logfile}")
+        print(f"Logging in {logfile}. Use --console to view the log directly here")
 
     # add trailing slash to output folder
     if args.output[-1] != "/":
@@ -314,6 +356,8 @@ def main():
     p.loadImage(path=args.input, selected_colors=args.colors, resize=args.resize)
     p.extractColors()
 
+    if args.printpalette:
+        p.printPalette()
     if args.palette:
         p.generatePalette()
         p.savePaletteImage(folder=output_folder)

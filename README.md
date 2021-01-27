@@ -68,11 +68,11 @@ By using the command `--resize` (or `-r`) the image will be resized in order to 
 | `-i` `--input` | Source image path | ✗ | `none` | `string` |
 | `-o` `--output` | Custom output folder | ✓ | `output/` | `string` |
 | `-c` `--colors` | Number of extracted colors | ✓ | `5` | `int` |
-| `-r` `--resize` | Resize the image for internal use | ✓ | `none` | `none` |
+| `-r` `--resize` | Resize the image for internal use | ✓ <sup>recommended (see below)</sup> | `none` | `none` |
 | `--console` | Log to console | ✓ | `False` | `none` |
-| `--palette` | Create an image containing the palette | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
-| `--printpalette` | Print the palette in the console | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
-| `--json` | Create a JSON file containing the palette | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
+| `--palette` | Create an image containing the palette | ✓ <sup>one of this group must be selected</sup> | `none` | `none` |
+| `--printpalette` | Print the palette in the console | ✓ <sup>one of this group must be selected</sup> | `none` | `none` |
+| `--json` | Create a JSON file containing the palette | ✓ <sup>one of this group must be selected</sup> | `none` | `none` |
 | `--incorporated` | Incorporate the palette inside the original image | ✓ <sup>but one of this group must be selected</sup> | `none` | `none` |
 | `--scl` | Original image scale (valid if used in the incorporated mode) | ✓ | `0.9` | `float` |
 | `--palettewidth` | Ratio of the palette to the original image (valid if used in the incorporated mode) | ✓ | `0.02` | `float` |
@@ -82,6 +82,9 @@ By using the command `--resize` (or `-r`) the image will be resized in order to 
 | `--outline` | Outline color of the palette (valid if used in the incorporated mode) | ✓ | `127 127 127` | `int int int` |
 | `--outlinewidth` | Width of the oultine of the palette (valid if used in the incorporated mode) | ✓ | `1` | `int` |
 | `--nooutline` | Removes the outline of the palette (valid if used in the incorporated mode) | ✓ | `none` | `none` |
+
+### Resize argument
+By setting this flag, the image will be resized before being processed. This won't affect the final result size and will speed up the process. The only downside is that there could be a very little loss of color, but will be likely not visible.
 
 ## Examples
 - Generate a 4 colors palette of the image "image-1.png" and save it as a new image file: `python3 imagepalette.py -i image-1.png -c 4 --palette`

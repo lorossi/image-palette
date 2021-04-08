@@ -316,23 +316,23 @@ def main():
 
     # some args might not be valid, if so quit the script
     if not args.input:
-        print("Specify the input image. Use -h to get a list of commands.")
+        parser.error("Specify the input image. Use -h to get a list of commands.")
         quit()
 
     if not args.printpalette and not args.palette and not args.json and not args.incorporated:
-        print("Specify the type of output (Palette, Printpalette, Incorporated, JSON). Use -h to get a list of commands.")
+        parser.error("Specify the type of output (Palette, Printpalette, Incorporated, JSON). Use -h to get a list of commands.")
         quit()
 
     if len(args.color) > 3 or max(args.color) > 255 or min(args.color) < 0:
-        print("The background color specified is wrong. Use -h to get a list of commands.")
+        parser.error("The background color specified is wrong. Use -h to get a list of commands.")
         quit()
 
     if len(args.outline) > 3 or max(args.outline) > 255 or min(args.outline) < 0:
-        print("The outline specified is wrong. Use -h to get a list of commands.")
+        parser.error("The outline specified is wrong. Use -h to get a list of commands.")
         quit()
 
     if not any(args.position.lower() == p for p in ["l", "r", "t", "b"]):
-        print("The position specified is wrong. Use -h to get a list of commands")
+        parser.error("The position specified is wrong. Use -h to get a list of commands")
         quit()
 
     if args.console:

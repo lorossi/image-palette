@@ -16,7 +16,11 @@ class KMeans:
     _avg_dist: float = None
 
     def __init__(
-        self, n_clusters: int, random_seed: int = None, min_dist: float = 1
+        self,
+        n_clusters: int,
+        random_seed: int = None,
+        min_dist: float = 1,
+        max_iterations: int = 5,
     ) -> KMeans:
         """Initialize a KMeans object.
 
@@ -26,6 +30,8 @@ class KMeans:
                If none is passed, the current timestamp is used. Defaults to None.
             min_dist (float, optional): minimum square distance between centroids. \
                 Defaults to 1.
+            max_iterations (int, optional): maximum number of iterations. \
+                Defaults to 5.
 
         Returns:
             KMeans
@@ -33,9 +39,13 @@ class KMeans:
         self._n_clusters = n_clusters
         self._random_seed = random_seed
         self._min_dist = min_dist
+        self._max_iterations = max_iterations
 
         if random_seed is None:
             self._random_seed = int(datetime.now().timestamp())
+
+    def _toFixed(self, num: float, digits: int = 2) -> float:
+        return float(f"{num:.{digits}f}")
 
     def fit(self, pixels: list[Color]) -> KMeans:
         """Fit the KMeans model.
@@ -49,7 +59,8 @@ class KMeans:
         logging.info(
             "Starting fit of KMeans model. "
             f"n_clusters={self._n_clusters}, min_dist={self._min_dist}, "
-            f"random_seed={self._random_seed}."
+            f"random_seed={self._random_seed}, "
+            f"max_iterations={self._max_iterations} (without change)."
         )
 
         # initialize centroids by randomly picking pixels
@@ -58,6 +69,9 @@ class KMeans:
         self._pixels = pixels
         # cound the number of iterations for logging purposes
         iteration = 0
+        last_avg_dist = None
+        unchanged_iterations = 0
+
         while True:
             logging.info(f"Iteration {iteration}...")
             self._invalidateAvgDist()
@@ -74,12 +88,21 @@ class KMeans:
             new_centroids = [self._centroid(cluster) for cluster in self._clusters]
             self._centroids = new_centroids
 
-            logging.info(f"Average distance: {self.avg_dist:.2f}")
+            logging.info(f"Average distance: {self._toFixed(self.avg_dist,2)}")
 
             if self.avg_dist < self._min_dist:
                 logging.info("Fitting completed.")
                 break
 
+            if last_avg_dist is not None and self._toFixed(
+                self.avg_dist
+            ) == self._toFixed(last_avg_dist):
+                unchanged_iterations += 1
+                if unchanged_iterations >= self._max_iterations:
+                    logging.info("Fitting completed.")
+                    break
+
+            last_avg_dist = self.avg_dist
             logging.info(f"Iteration {iteration} completed.")
             iteration += 1
 

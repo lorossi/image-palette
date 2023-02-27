@@ -48,12 +48,16 @@ class PaletteExtractor:
             new_height = int(self._im.height / self._im.width * new_width)
             self._working_image = self._working_image.resize((new_width, new_height))
 
-    def extractColors(self, seed: int = None, min_dist: int = 1):
+    def extractColors(self, seed: int = None, min_dist: int = 25, max_iter: int = 5):
         """Extract the colors from the image.
 
         Args:
             seed (int, optional): Seed to initialize the KMeans algorithm. \
                 If none is provided, the algorithm will use the current time.
+            min_dist (int, optional): Minimum average distance between the centroids \
+                and each pixel. Defaults to 25.
+            max_iter (int, optional): Maximum number of iterations without change \
+                in objective function. Defaults to 5.
         """
         # start extracting the colors
         logging.info("Starting color extractions")
@@ -66,7 +70,12 @@ class PaletteExtractor:
         ]
         # run the KMeans algorithm
         self._colors = (
-            KMeans(n_clusters=self._palette_size, random_seed=seed, min_dist=min_dist)
+            KMeans(
+                n_clusters=self._palette_size,
+                random_seed=seed,
+                min_dist=min_dist,
+                max_iterations=max_iter,
+            )
             .fit(pixels=pixels_list)
             .centroids
         )
@@ -103,126 +112,139 @@ class PaletteExtractor:
     def incorporatePalette(
         self,
         output_scl: float = 0.9,
-        palette_width_scl: float = 0.1,
-        palette_height_scl: float = 0.9,
-        background_color: tuple[int] = (220, 220, 220),
-        outline_color: tuple[int] = (127, 127, 127),
+        color_width_scl: float = 0.9,
+        color_height_scl: float = 0.9,
+        background_color: Color = None,
+        outline_color: Color = None,
         line_width: int = 1,
         position: Position = Position.RIGHT,
     ):
         """Incorporate the palette in the image.
 
         Args:
-            output_scl (float, optional): Scale of the output image. Defaults to 0.9.
-            palette_width_scl (float, optional): Width of the palette relative to \
-                the size of the image.. Defaults to 0.1.
-            palette_height_scl (float, optional): Height of the palette relative to \
-                the size of the image.. Defaults to 0.9.
-            background_color (tuple[int], optional): Background color of the palette. \
-                Defaults to (220, 220, 220).
-            outline_color (tuple[int], optional): Outline color of the palette. \
-                Defaults to (127, 127, 127).
+            output_scl (float, optional): Relative of the original image \
+                in the output image. Defaults to 0.9.
+            color_width_scl (float, optional): Width of the color rectangle relative \
+                to the size of the palette. Defaults to 0.9.
+            color_height_scl (float, optional): Height of the color rectangle relative \
+                to the size of the palette. Defaults to 0.9.
+            background_color (Color, optional): Background color of the palette. \
+                Defaults to Color(220, 220, 220).
+            outline_color (Color, optional): Outline color of the palette. \
+                If not provided, the outline will be the same as the background color.
             line_width (int, optional): Width of the outline. Defaults to 1.
             position (Position, optional): Position of the palette. \
                  Defaults to Position.RIGHT.
         """
+
+        if background_color is None:
+            background_color = Color(220, 220, 220)
+        if outline_color is None:
+            outline_color = background_color
+
+        logging.info("Incorporating palette in the image")
+
         # image resized
-        new_width = int(self._im.width / output_scl)
-        new_height = int(self._im.height / output_scl)
-        # image displacement
-        image_dx = int((new_width - self._im.width) / 2)
-        image_dy = int((new_height - self._im.height) / 2)
 
-        # bar sizes calculation
-        palette_width = int(new_width * palette_width_scl)
-        palette_height = int(new_height * palette_height_scl)
-        slice_width = int(palette_width / self._palette_size)
-        slice_height = int(palette_height / self._palette_size)
-        bar_height = int(slice_height * 0.75)
-        bar_width = int(palette_width * 0.5)
+        if position == Position.RIGHT or position == Position.LEFT:
+            # image size
+            new_width = int(self._im.width * output_scl)
+            new_height = int(self._im.height)
+            # bars container size
+            container_width = int(self._im.width * (1 - output_scl))
+            container_height = int(self._im.height)
+            # bars size
+            bar_width = int(container_width * color_width_scl)
+            bar_height = int(container_height / len(self._colors))
+            # bars displacement
+            bar_dx = int((container_width - bar_width) / 2)
+            bar_dy = 0
+            # color size
+            color_height = bar_height * color_height_scl
+            color_dx = 0
+            color_dy = int((bar_height - color_height) / 2)
+        else:
+            # image size
+            new_width = int(self._im.width)
+            new_height = int(self._im.height * output_scl)
+            # bars container size
+            container_width = int(self._im.width)
+            container_height = int(self._im.height * (1 - output_scl))
+            # bars size
+            bar_width = int(container_width / len(self._colors))
+            bar_height = int(container_height * color_height_scl)
+            # bars displacement
+            bar_dx = 0
+            bar_dy = int((container_height - bar_height) / 2)
+            # color size
+            color_width = bar_width * color_width_scl
+            color_dx = int((bar_width - color_width) / 2)
+            color_dy = 0
 
-        # displacement
-        if position.value in ["l", "r"]:
-            bars_dx = int((palette_width - bar_width) / 2)
-            bars_dy = int((slice_height - bar_height) / 2)
-        elif position.value in ["t", "b"]:
-            bars_dx = int((slice_width - bar_width) / 2)
-            bars_dy = int((palette_height - bar_height) / 2)
+        # fill the container
+        container = Image.new(
+            "RGB",
+            (container_width, container_height),
+            background_color.rgb,
+        )
+        draw = ImageDraw.Draw(container)
 
-        logging.info("Starting palette incorporation")
-        bars = Image.new("RGB", (palette_width, palette_height), color=background_color)
-        draw = ImageDraw.Draw(bars)
-
-        if position.value in ["l", "r"]:
-            # draw each bar
+        if position == Position.LEFT or position == Position.RIGHT:
             for i, c in enumerate(self._colors):
-                x_0 = bars_dx
-                y_0 = i * slice_height + bars_dy
+                x_0 = bar_dx + color_dx
+                y_0 = bar_dy + color_dy + i * bar_height
                 x_1 = x_0 + bar_width
-                y_1 = y_0 + bar_height
-                fill = c.rgb
+                y_1 = y_0 + color_height
+
                 draw.rectangle(
                     [x_0, y_0, x_1, y_1],
-                    fill=fill,
-                    outline=outline_color,
+                    fill=c.rgb,
+                    outline=outline_color.rgb,
                     width=line_width,
                 )
 
-            self._incorporated_palette = Image.new(
-                "RGB", (new_width + palette_width, new_height), color=background_color
-            )
-            palette_dy = int((new_height - palette_height) / 2)
-            palette_dx = int(0.5 * image_dx)
-
-        elif position.value in ["t", "b"]:
-            # draw each bar
+            self._incorporated_palette = Image.new("RGB", (new_width, new_height))
+            if position == Position.RIGHT:
+                self._incorporated_palette.paste(self._im, (0, 0))
+                self._incorporated_palette.paste(
+                    container, (new_width - container_width, 0)
+                )
+            elif position == Position.LEFT:
+                self._incorporated_palette.paste(self._im, (container_width, 0))
+                self._incorporated_palette.paste(container, (0, 0))
+        else:
             for i, c in enumerate(self._colors):
-                x_0 = i * slice_width + bars_dx
-                y_0 = bars_dy
-                x_1 = x_0 + bar_width
+                x_0 = bar_dx + color_dx + i * bar_width
+                y_0 = bar_dy + color_dy
+                x_1 = x_0 + color_width
                 y_1 = y_0 + bar_height
-                fill = c.rgb
-                draw.rectangle(
-                    [x_0, y_0, x_1, y_1],
-                    fill=fill,
-                    outline=outline_color,
-                    width=line_width,
-                )
-            self._incorporated_palette = Image.new(
-                "RGB",
-                (new_width, new_height + palette_height),
-                color=background_color,
-            )
-            palette_dx = int((new_width - palette_width) / 2)
-            palette_dy = int(0.5 * image_dy)
 
-        if position.value in ["l", "r"]:
-            # left or right
-            if position.value == "l":
-                self._incorporated_palette.paste(
-                    self._im, (palette_width + image_dx, image_dy)
+                draw.rectangle(
+                    [x_0, y_0, x_1, y_1], fill=c.rgb, outline=outline_color.rgb
                 )
-                self._incorporated_palette.paste(bars, (palette_dx, palette_dy))
-            elif position.value == "r":
-                self._incorporated_palette.paste(self._im, (image_dx, image_dy))
+
+            self._incorporated_palette = Image.new("RGB", (new_width, new_height))
+            if position == Position.BOTTOM:
+                self._incorporated_palette.paste(self._im, (0, 0))
                 self._incorporated_palette.paste(
-                    bars,
-                    (new_width - palette_width + palette_dx + image_dx, palette_dy),
+                    container, (0, new_height - container_height)
                 )
-        elif position.value in ["t", "b"]:
-            if position.value == "t":
-                self._incorporated_palette.paste(
-                    self._im, (image_dx, image_dy + palette_height)
-                )
-                self._incorporated_palette.paste(bars, (palette_dx, palette_dy))
-            elif position.value == "b":
-                self._incorporated_palette.paste(self._im, (image_dx, image_dy))
-                self._incorporated_palette.paste(
-                    bars,
-                    (palette_dx, new_height - palette_height + image_dy + palette_dy),
-                )
+
+            elif position == Position.TOP:
+                self._incorporated_palette.paste(self._im, (0, container_height))
+                self._incorporated_palette.paste(container, (0, 0))
 
         logging.info("Palette incorporated")
+
+    def loadPaletteJSON(self, path: str):
+        """Load a palette from a JSON file.
+
+        Args:
+            path (str): Path to the JSON file.
+        """
+        with open(path, "r") as f:
+            data = json.load(f)
+        self._colors = [Color(*c) for c in data["rgb"]]
 
     def printPalette(self):
         """Print the palette in the console.

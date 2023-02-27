@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 from .color import Color
 from .kmeans import KMeans
 from .position import Position
-from .terminal import format_color
+from .terminal import format_table, Cell
 
 
 class PaletteExtractor:
@@ -66,8 +66,8 @@ class PaletteExtractor:
         ]
         # run the KMeans algorithm
         self._colors = (
-            KMeans(n_clusters=self._palette_size, random_seed=seed)
-            .fit(pixels=pixels_list, min_dist=min_dist)
+            KMeans(n_clusters=self._palette_size, random_seed=seed, min_dist=min_dist)
+            .fit(pixels=pixels_list)
             .centroids
         )
         # sort by saturation and hue
@@ -245,44 +245,17 @@ class PaletteExtractor:
         The console must support TrueColor.
         """
         # print the palette in the console
+        cells = []
         BAR_WIDTH = 16
-        SEPARATOR = " │ "
-        HORIZONTAL_LINE = "─"
-
-        max_rgb = max(len(str(c.rgb)) for c in self._colors)
-        max_hsv = max(len(str(c.hsv_formatted)) for c in self._colors)
-        max_hex = max(len(str(c.hex)) for c in self._colors)
-
-        line_width = BAR_WIDTH + max_rgb + max_hsv + max_hex + len(SEPARATOR) * 6 + 1
-        line_color = Color(233, 233, 233)  # light gray
-        print("\n", format_color("Extracted color palette:", fore=line_color), "\n")
-        print(" ", format_color(HORIZONTAL_LINE * line_width, fore=line_color), sep="")
-
         for c in self._colors:
-            rgb = c.rgb
-            hsv = c.hsv_formatted
-            hex = c.hex
+            row = []
+            row.append(Cell("█" * BAR_WIDTH, fore=c))
+            row.append(Cell(c.rgb_formatted))
+            row.append(Cell(c.hsv_formatted))
+            row.append(Cell(c.hex))
+            cells.append(row)
 
-            spacing_rgb = max_rgb - len(str(rgb))
-            spacing_hsv = max_hsv - len(str(hsv))
-
-            print(format_color(SEPARATOR, fore=line_color), end="")
-            print(format_color(" " * BAR_WIDTH, back=c), sep=" ", end="")
-            print(format_color(SEPARATOR, fore=line_color), end="")
-            print(f"rgb{rgb}{spacing_rgb * ' '}", end="")
-            print(format_color(SEPARATOR, fore=line_color), end="")
-            print(f"hsv{hsv}{spacing_hsv * ' '}", end="")
-            print(format_color(SEPARATOR, fore=line_color), end="")
-            print(f"{hex}", end="")
-
-            print(format_color(SEPARATOR, fore=line_color))
-
-        print(
-            " ",
-            format_color(HORIZONTAL_LINE * line_width, fore=line_color),
-            "\n",
-            sep="",
-        )
+        print(format_table(cells, border_fore=Color(211, 211, 211)))
 
     def savePaletteImage(self, folder: str = "output/"):
         """Save the palette image.

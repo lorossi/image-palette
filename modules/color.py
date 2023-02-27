@@ -125,7 +125,16 @@ class Color:
         Returns:
             str
         """
-        return f"({self._hsv[0]}°, {self._hsv[1]}%, {self._hsv[2]}%)"
+        return f"hsv({self._hsv[0]}°, {self._hsv[1]}%, {self._hsv[2]}%)"
+
+    @property
+    def rgb_formatted(self) -> str:
+        """Return the RGB components of the color as a formatted string.
+
+        Returns:
+            str
+        """
+        return f"rgb({self._rgb[0]}, {self._rgb[1]}, {self._rgb[2]})"
 
     @property
     def hue(self) -> int:

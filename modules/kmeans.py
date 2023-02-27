@@ -12,6 +12,8 @@ class KMeans:
     """Naive implementation of KMeans clustering algorithm."""
 
     _centroids: list[Color] = None
+    _clusters: list[list[Color]] = None
+    _avg_dist: float = None
 
     def __init__(
         self, n_clusters: int, random_seed: int = None, min_dist: float = 1
@@ -52,41 +54,72 @@ class KMeans:
 
         # initialize centroids by randomly picking pixels
         random.seed(self._random_seed)
-        centroids = random.sample(pixels, self._n_clusters)
+        self._centroids = random.sample(pixels, self._n_clusters)
+        self._pixels = pixels
         # cound the number of iterations for logging purposes
         iteration = 0
         while True:
             logging.info(f"Iteration {iteration}...")
-            clusters = [[] for _ in range(self._n_clusters)]
+            self._invalidateAvgDist()
+            self._clusters = [[] for _ in range(self._n_clusters)]
 
-            for pixel in pixels:
-                dist = [self._distance(pixel, centroid) for centroid in centroids]
-                clusters[dist.index(min(dist))].append(pixel)
+            logging.info("Assigning pixels to clusters...")
+            for pixel in self._pixels:
+                dist = [
+                    self._sq_distance(pixel, centroid) for centroid in self._centroids
+                ]
+                self._clusters[dist.index(min(dist))].append(pixel)
 
-            new_centroids = [self._centroid(cluster) for cluster in clusters]
+            logging.info("Calculating new centroids...")
+            new_centroids = [self._centroid(cluster) for cluster in self._clusters]
+            self._centroids = new_centroids
 
-            if all(
-                self._distance(c1, c2) < self._min_dist
-                for c1, c2 in zip(centroids, new_centroids)
-            ):
-                self._centroids = centroids
-                self._clusters = clusters
+            logging.info(f"Average distance: {self.avg_dist:.2f}")
+
+            if self.avg_dist < self._min_dist:
                 logging.info("Fitting completed.")
                 break
 
-            centroids = new_centroids
-            iteration += 1
             logging.info(f"Iteration {iteration} completed.")
+            iteration += 1
 
         return self
 
-    def _distance(self, pixel: Color, centroid: list[float]) -> float:
+    def _sq_distance(self, pixel: Color, centroid: list[float]) -> float:
         return sum((p - c) ** 2 for p, c in zip(pixel.rgb, centroid.rgb))
 
     def _centroid(self, cluster: list[list[float]]) -> list[float]:
         return Color(
             *[int(sum(p) / len(p)) for p in zip(*[pixel.rgb for pixel in cluster])]
         )
+
+    def _calculateAvgDist(self) -> float:
+        return (
+            sum(
+                [
+                    self._sq_distance(pixel, centroid)
+                    for centroid, cluster in zip(self._centroids, self._clusters)
+                    for pixel in cluster
+                ]
+            )
+            / len(self._pixels)
+        ) ** 0.5
+
+    def _invalidateAvgDist(self) -> None:
+        self._avg_dist = None
+
+    @property
+    def avg_dist(self) -> float:
+        """Get the average distance between pixels and their centroids.
+
+        Returns:
+            float
+        """
+
+        if self._avg_dist is None:
+            self._avg_dist = self._calculateAvgDist()
+
+        return self._avg_dist
 
     @property
     def centroids(self) -> list[Color]:

@@ -109,9 +109,9 @@ def main():
     )
     parser.add_argument(
         "--min-color-distance",
-        help="Minimum square distance between colors in the palette. " "Default: 1",
+        help="Minimum square distance between colors in the palette. " "Default: 35",
         type=int,
-        default=1,
+        default=35,
     )
 
     args = parser.parse_args()

@@ -74,6 +74,15 @@ def format_color(text: str, fore: Color = None, back: Color = None) -> str:
 
 
 def format_table(cells: list[list[Cell]], border_fore: Color = None) -> str:
+    """Format a table.
+
+    Args:
+        cells (list[list[Cell]]): List of cells.
+        border_fore (Color, optional): Color of the border. Defaults to None.
+
+    Returns:
+        str
+    """
     if border_fore is None:
         VERTICAL_LINE = "│"
         HORIZONTAL_LINE = "─"
@@ -94,8 +103,6 @@ def format_table(cells: list[list[Cell]], border_fore: Color = None) -> str:
         BOTTOM_CONNECTOR = format_color("┴", fore=border_fore)
 
     max_col_width = [max(len(cell) + 2 for cell in col) for col in zip(*cells)]
-
-    print(max_col_width)
 
     table = ""
     table += TOP_LEFT_ANGLE
@@ -128,5 +135,3 @@ def format_table(cells: list[list[Cell]], border_fore: Color = None) -> str:
     table += BOTTOM_RIGHT_ANGLE
 
     return table
-
-    # find the maximum length of each column

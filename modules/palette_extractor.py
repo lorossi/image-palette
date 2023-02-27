@@ -48,6 +48,16 @@ class PaletteExtractor:
             new_height = int(self._im.height / self._im.width * new_width)
             self._working_image = self._working_image.resize((new_width, new_height))
 
+    def loadJSON(self, path: str) -> None:
+        """Load a palette from a JSON file.
+
+        Args:
+            path (str): Path to the JSON file.
+        """
+        with open(path) as f:
+            colors = json.load(f)
+        self._colors = [Color(*c) for c in colors["rgb"]]
+
     def extractColors(self, seed: int = None, min_dist: int = 1):
         """Extract the colors from the image.
 
@@ -173,12 +183,12 @@ class PaletteExtractor:
             )
             palette_dy = int((new_height - palette_height) / 2)
             palette_dx = int(0.5 * image_dx)
-            if position == "l":
+            if position.value == "l":
                 self._incorporated_palette.paste(
                     self._im, (palette_width + image_dx, image_dy)
                 )
                 self._incorporated_palette.paste(bars, (palette_dx, palette_dy))
-            elif position == "r":
+            elif position.value == "r":
                 self._incorporated_palette.paste(self._im, (image_dx, image_dy))
                 self._incorporated_palette.paste(
                     bars,
@@ -186,13 +196,6 @@ class PaletteExtractor:
                 )
 
         if position.value == "t" or position.value == "b":
-            # bar sizes calculation
-            palette_width = int(new_width * palette_width_scl)
-            palette_height = int(new_height * palette_height_scl)
-            slice_width = int(palette_width / self._palette_size)
-            bar_width = int(slice_width * 0.75)
-            bar_height = int(palette_height * 0.5)
-
             # displacement
             bars_dx = int((slice_width - bar_width) / 2)
             bars_dy = int((palette_height - bar_height) / 2)
@@ -303,4 +306,4 @@ class PaletteExtractor:
 
     @property
     def _filename(self) -> str:
-        return self._path.split("/")[-1].split(".")[0] + ".png"
+        return self._path.split("/")[-1].split(".")[0]

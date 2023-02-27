@@ -1,17 +1,18 @@
 from __future__ import annotations
+from typing import Any
 
 
 class Color:
-    # class containing all information about a colour
-    def __init__(self, rgb: list[int]) -> Color:
+    _frozen: bool = False
+    # class containing all information about a color
+    def __init__(self, r: int, g: int, b: int) -> Color:
         # it's initialized as rgb list
-        self._rgb = [int(x) for x in rgb]
-        self._hsv = []
-
-        self.RGBtoHSV()
+        self._rgb = (r, g, b)
+        self._hsv = self._toHSV()
+        self._frozen = True
 
     # rgb to hsv conversion
-    def RGBtoHSV(self):
+    def _toHSV(self) -> tuple[int, int, int]:
         r = self._rgb[0] / 255
         g = self._rgb[1] / 255
         b = self._rgb[2] / 255
@@ -36,9 +37,24 @@ class Color:
 
         v = c_max * 100
 
-        self._hsv = [int(h), int(s), int(v)]
+        return (int(h), int(s), int(v))
+
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        if self._frozen:
+            raise AttributeError("Color object is immutable")
+        super().__setattr__(__name, __value)
 
     # getter functions
+    @property
+    def r(self) -> int:
+        return self._rgb[0]
+
+    def g(self) -> int:
+        return self._rgb[1]
+
+    def b(self) -> int:
+        return self._rgb[2]
+
     @property
     def rgb(self) -> tuple[int, int, int]:
         return tuple(self._rgb)

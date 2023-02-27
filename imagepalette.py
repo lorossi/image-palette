@@ -15,62 +15,58 @@ from terminal import format_color
 
 class PaletteExtractor:
     # extracts the palette
-    def __init__(self):
-        self._colours = []
-        self._resized_width = 1000
+    _colors: list[Color] = None
+    _resized_width: int = 1000
 
-    def loadImage(self, path, selected_colours=5, resize=False):
+    def __init__(self):
+        self._colors = []
+
+    def loadImage(self, path: str, palette_size: int = 5, resize: bool = False) -> None:
         self._path = path
         # removes folder and file extension from filename
-        self._filename = ".".join(self._path.split("/")[-1].split(".")[:-1])
-        self._selected_colours = selected_colours
-        try:
-            self._im = Image.open(self._path)
-        except Exception as e:
-            logging.error(f"Cannot open image {self._path}. Error: {e}")
-            raise e
+
+        self._palette_size = palette_size
+        self._im = Image.open(self._path)
 
         self._working_image = self._im.copy()
         # resize the image if it's too big
-        # you might miss some colours but the runtime will be way lower
+        # you might miss some colors but the runtime will be way lower
         if resize and self._im.width > self._resized_width:
             new_width = self._resized_width
             new_height = int(self._im.height / self._im.width * new_width)
-            self._working_image = self._working_image.resize(
-                (new_width, new_height)
-            )
+            self._working_image = self._working_image.resize((new_width, new_height))
 
-    def extractColours(self):
-        # start extracting the colours
-        logging.info("Starting colour extractions")
+    def extractColors(self, seed: int = None):
+        # start extracting the colors
+        logging.info("Starting color extractions")
         pixels = self._working_image.load()
         # need to convert to list the list of lists
         pixels_list = [
-            pixels[x, y]
+            Color(*pixels[x, y])
             for x in range(self._working_image.width)
             for y in range(self._working_image.height)
         ]
-        kmeans = KMeans(n_clusters=self._selected_colours, initial_state=0).fit(
-            pixels_list
+
+        kmeans = KMeans(n_clusters=self._palette_size, random_seed=seed).fit(
+            pixels=pixels_list
         )
-        # append the fund colours to the private variable
-        for k in kmeans.centroids:
-            self._colours.append(Color(k))
+        # append the fund colors to the private variable
+        self._colors = kmeans._centroids
         # sort by saturation and hue
-        self._colours.sort(key=lambda x: x.saturation, reverse=False)
-        self._colours.sort(key=lambda x: x.hue, reverse=False)
-        logging.info("Colours extracted")
+        self._colors.sort(key=lambda x: x.saturation, reverse=False)
+        self._colors.sort(key=lambda x: x.hue, reverse=False)
+        logging.info("Colors extracted")
 
     def generatePalette(self, output_width=1000, output_height=200):
         # generates an image containing the palette
         logging.info("Starting palette image generation")
-        bars_width = int(output_width / self._selected_colours)
+        bars_width = int(output_width / self._palette_size)
 
         self._palette = Image.new("RGB", (output_width, output_height))
         draw = ImageDraw.Draw(self._palette)
 
         i = 0
-        for c in self._colours:
+        for c in self._colors:
             x_0 = i * bars_width
             y_0 = 0
             x_1 = (i + 1) * bars_width
@@ -85,8 +81,8 @@ class PaletteExtractor:
         output_scl=0.9,
         palette_width_scl=0.1,
         palette_height_scl=0.9,
-        background_colour=(220, 220, 220),
-        outline_colour=(127, 127, 127),
+        background_color=(220, 220, 220),
+        outline_color=(127, 127, 127),
         line_width=1,
         position="r",
     ):
@@ -102,7 +98,7 @@ class PaletteExtractor:
             # bar sizes calculation
             palette_width = int(new_width * palette_width_scl)
             palette_height = int(new_height * palette_height_scl)
-            slice_height = int(palette_height / self._selected_colours)
+            slice_height = int(palette_height / self._palette_size)
             bar_height = int(slice_height * 0.75)
             bar_width = int(palette_width * 0.5)
             # displacement
@@ -111,12 +107,12 @@ class PaletteExtractor:
 
             logging.info("Starting palette incorporation")
             bars = Image.new(
-                "RGB", (palette_width, palette_height), colour=background_colour
+                "RGB", (palette_width, palette_height), color=background_color
             )
             draw = ImageDraw.Draw(bars)
             # draw each bar
             i = 0
-            for c in self._colours:
+            for c in self._colors:
                 x_0 = bars_dx
                 y_0 = i * slice_height + bars_dy
                 x_1 = x_0 + bar_width
@@ -125,14 +121,14 @@ class PaletteExtractor:
                 draw.rectangle(
                     [x_0, y_0, x_1, y_1],
                     fill=fill,
-                    outline=outline_colour,
+                    outline=outline_color,
                     width=line_width,
                 )
                 i += 1
 
             # left or right
             self._incorporated_palette = Image.new(
-                "RGB", (new_width + palette_width, new_height), colour=background_colour
+                "RGB", (new_width + palette_width, new_height), color=background_color
             )
             palette_dy = int((new_height - palette_height) / 2)
             palette_dx = int(0.5 * image_dx)
@@ -152,7 +148,7 @@ class PaletteExtractor:
             # bar sizes calculation
             palette_width = int(new_width * palette_width_scl)
             palette_height = int(new_height * palette_height_scl)
-            slice_width = int(palette_width / self._selected_colours)
+            slice_width = int(palette_width / self._palette_size)
             bar_width = int(slice_width * 0.75)
             bar_height = int(palette_height * 0.5)
 
@@ -162,12 +158,12 @@ class PaletteExtractor:
 
             logging.info("Starting palette incorporation")
             bars = Image.new(
-                "RGB", (palette_width, palette_height), colour=background_colour
+                "RGB", (palette_width, palette_height), color=background_color
             )
             draw = ImageDraw.Draw(bars)
             # draw each bar
             i = 0
-            for c in self._colours:
+            for c in self._colors:
                 x_0 = i * slice_width + bars_dx
                 y_0 = bars_dy
                 x_1 = x_0 + bar_width
@@ -176,7 +172,7 @@ class PaletteExtractor:
                 draw.rectangle(
                     [x_0, y_0, x_1, y_1],
                     fill=fill,
-                    outline=outline_colour,
+                    outline=outline_color,
                     width=line_width,
                 )
                 i += 1
@@ -184,7 +180,7 @@ class PaletteExtractor:
             self._incorporated_palette = Image.new(
                 "RGB",
                 (new_width, new_height + palette_height),
-                colour=background_colour,
+                color=background_color,
             )
             palette_dx = int((new_width - palette_width) / 2)
             palette_dy = int(0.5 * image_dy)
@@ -205,17 +201,17 @@ class PaletteExtractor:
     def printPalette(self):
         # print the palette in the console
         bar_width = 16
-        max_rgb = max(len(str(c.rgb)) for c in self._colours)
-        max_hsv = max(len(str(c.hsv_formatted)) for c in self._colours)
-        max_hex = max(len(str(c.hex)) for c in self._colours)
+        max_rgb = max(len(str(c.rgb)) for c in self._colors)
+        max_hsv = max(len(str(c.hsv_formatted)) for c in self._colors)
+        max_hex = max(len(str(c.hex)) for c in self._colors)
 
         separator = " | "
         line_width = bar_width + max_rgb + max_hsv + max_hex + len(separator) * 6 + 1
-        line_colour = Color([233, 233, 233])  # light gray
-        print("\n", format_color("Extracted colour palette:", fore=line_colour), "\n")
-        print(" ", format_color("-" * line_width, fore=line_colour), sep="")
+        line_color = Color(233, 233, 233)  # light gray
+        print("\n", format_color("Extracted color palette:", fore=line_color), "\n")
+        print(" ", format_color("-" * line_width, fore=line_color), sep="")
 
-        for c in self._colours:
+        for c in self._colors:
             rgb = c.rgb
             hsv = c.hsv_formatted
             hex = c.hex
@@ -223,18 +219,18 @@ class PaletteExtractor:
             spacing_rgb = max_rgb - len(str(rgb))
             spacing_hsv = max_hsv - len(str(hsv))
 
-            print(format_color(" | ", fore=line_colour), end="")
+            print(format_color(" | ", fore=line_color), end="")
             print(format_color(" " * bar_width, back=c), sep=" ", end="")
-            print(format_color(separator, fore=line_colour), end="")
+            print(format_color(separator, fore=line_color), end="")
             print(f"rgb{rgb}{spacing_rgb * ' '}", end="")
-            print(format_color(separator, fore=line_colour), end="")
+            print(format_color(separator, fore=line_color), end="")
             print(f"hsv{hsv}{spacing_hsv * ' '}", end="")
-            print(format_color(separator, fore=line_colour), end="")
+            print(format_color(separator, fore=line_color), end="")
             print(f"{hex}", end="")
 
-            print(format_color(" |", fore=line_colour))
+            print(format_color(" |", fore=line_color))
 
-        print(" ", format_color("-" * line_width, fore=line_colour), "\n", sep="")
+        print(" ", format_color("-" * line_width, fore=line_color), "\n", sep="")
 
     def crateFolder(self, path):
         pathlib.Path(path).mkdir(parents=True, exist_ok=True)
@@ -253,13 +249,13 @@ class PaletteExtractor:
         self._incorporated_palette.save(path)
         logging.info(f"Incorporated palette image saved. Path: {path}")
 
-    def savePaletteJSON(self, folder="output/"):
-        # save the colours in a JSON file
+    def savePaletteJSON(self, folder: str = "output/"):
+        # save the colors in a JSON file
         self.crateFolder(folder)
 
         json_dict = {"rgb": [], "hsv": [], "hex": []}
 
-        for c in self._colours:
+        for c in self._colors:
             json_dict["rgb"].append(c.rgb)
             json_dict["hsv"].append(c.hsv)
             json_dict["hex"].append(c.hex)
@@ -269,17 +265,19 @@ class PaletteExtractor:
             json.dump(json_dict, json_file, indent=2)
         logging.info(f"JSON file saved. Path: {path}")
 
+    @property
+    def _filename(self) -> str:
+        return self._path.split("/")[-1].split(".")[0] + ".png"
+
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Extract colour palette from any image"
-    )
+    parser = argparse.ArgumentParser(description="Extract color palette from any image")
     parser.add_argument("-i", "--input", help="Source image path")
     parser.add_argument(
         "-o", "--output", help="Custom output folder", default="output/"
     )
     parser.add_argument(
-        "-c", "--colours", help="Number of extracted colours", type=int, default=5
+        "-c", "--colors", help="Number of extracted colors", type=int, default=5
     )
     parser.add_argument(
         "-r",
@@ -327,15 +325,15 @@ def main():
     )
     parser.add_argument(
         "--position",
-        help="Position of the colour legend. Valid values: l, r, t, b "
+        help="Position of the color legend. Valid values: l, r, t, b "
         "(for left, right, top, bottom) (valid if used in the incorporated mode). "
         "Default: r",
         type=str,
         default="r",
     )
     parser.add_argument(
-        "--colour",
-        help="Background colour of the image. Pass 3 integers in range 0-255 "
+        "--color",
+        help="Background color of the image. Pass 3 integers in range 0-255 "
         "(valid if used in the incorporated mode). Example: 244 34 111. "
         "Default 220 220 220",
         nargs="+",
@@ -344,7 +342,7 @@ def main():
     )
     parser.add_argument(
         "--outline",
-        help="Outline colour of the palette. Pass 3 integers in range 0-255 "
+        help="Outline color of the palette. Pass 3 integers in range 0-255 "
         " (valid if used in the incorporated mode). Example: 244 34 111. "
         "Default 127 127 127",
         nargs="+",
@@ -384,9 +382,9 @@ def main():
         )
         quit()
 
-    if len(args.colour) > 3 or max(args.colour) > 255 or min(args.colour) < 0:
+    if len(args.color) > 3 or max(args.color) > 255 or min(args.color) < 0:
         parser.error(
-            "The background colour specified is wrong. "
+            "The background color specified is wrong. "
             "Use -h to get a list of commands."
         )
         quit()
@@ -425,8 +423,8 @@ def main():
 
     # fire up the extractor and load an image
     p = PaletteExtractor()
-    p.loadImage(path=args.input, selected_colours=args.colours, resize=args.resize)
-    p.extractColours()
+    p.loadImage(path=args.input, palette_size=args.colors, resize=args.resize)
+    p.extractColors()
 
     if args.printpalette:
         p.printPalette()
@@ -436,18 +434,18 @@ def main():
     if args.json:
         p.savePaletteJSON()
     if args.incorporated:
-        background_colour = tuple(args.colour)
+        background_color = tuple(args.color)
         if not args.nooutline:
-            outline_colour = tuple(args.outline)
+            outline_color = tuple(args.outline)
         else:
-            outline_colour = None
+            outline_color = None
         p.incorporatePalette(
             output_scl=args.scl,
             palette_width_scl=args.palettewidth,
             palette_height_scl=args.paletteheight,
             position=args.position,
-            background_colour=background_colour,
-            outline_colour=outline_colour,
+            background_color=background_color,
+            outline_color=outline_color,
             line_width=args.outlinewidth,
         )
         p.saveIncorporatedPalette(folder=output_folder)

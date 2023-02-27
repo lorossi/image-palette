@@ -17,7 +17,7 @@ def main():
 
         p = PaletteExtractor()
         p.loadImage(photo, resize=True)
-        p.extractColours()
+        p.extractColors()
 
         if width > height:
             # horizontal image

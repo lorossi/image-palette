@@ -2,26 +2,32 @@ from __future__ import annotations
 
 import logging
 import random
+from datetime import datetime
+from color import Color
 
 
 class KMeans:
-    _centroids: list[list[float]] = None
+    _centroids: list[Color] = None
 
     def __init__(
-        self, n_clusters: int, initial_state: int = 0, min_dist: float = 1
+        self, n_clusters: int, random_seed: int = None, min_dist: float = 100
     ) -> KMeans:
         self._n_clusters = n_clusters
-        self._initial_state = initial_state
+        self._random_seed = random_seed
         self._min_dist = min_dist
 
-        random.seed(self._initial_state)
+        if random_seed is None:
+            self._random_seed = int(datetime.now().timestamp())
 
-    def fit(self, pixels: list[list[float]]) -> KMeans:
+        random.seed(self._random_seed)
+
+    def fit(self, pixels: list[Color]) -> KMeans:
         centroids = random.sample(pixels, self._n_clusters)
 
         logging.info(
             "Starting fit of KMeans model. "
-            f"n_clusters={self._n_clusters}, min_dist={self._min_dist}"
+            f"n_clusters={self._n_clusters}, min_dist={self._min_dist}, "
+            f"random_seed={self._random_seed}."
         )
 
         iteration = 0
@@ -50,16 +56,18 @@ class KMeans:
 
         return self
 
-    def _distance(self, pixel: list[float], centroid: list[float]) -> float:
-        return sum((p - c) ** 2 for p, c in zip(pixel, centroid)) ** 0.5
+    def _distance(self, pixel: Color, centroid: list[float]) -> float:
+        return sum((p - c) ** 2 for p, c in zip(pixel.rgb, centroid.rgb))
 
     def _centroid(self, cluster: list[list[float]]) -> list[float]:
-        return [sum(pixel) / len(pixel) for pixel in zip(*cluster)]
+        return Color(
+            *[int(sum(p) / len(p)) for p in zip(*[pixel.rgb for pixel in cluster])]
+        )
 
     @property
-    def centroids(self) -> list[list[float]]:
+    def centroids(self) -> list[Color]:
         return self._centroids.copy()
 
     @property
-    def clusters(self) -> list[list[list[float]]]:
+    def clusters(self) -> list[list[Color]]:
         return self._clusters.copy()

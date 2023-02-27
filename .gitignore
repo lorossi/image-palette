@@ -1,3 +1,5 @@
 *test*
 *.log*
 __pycache__
+venv
+.vscode

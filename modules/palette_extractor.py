@@ -48,16 +48,6 @@ class PaletteExtractor:
             new_height = int(self._im.height / self._im.width * new_width)
             self._working_image = self._working_image.resize((new_width, new_height))
 
-    def loadJSON(self, path: str) -> None:
-        """Load a palette from a JSON file.
-
-        Args:
-            path (str): Path to the JSON file.
-        """
-        with open(path) as f:
-            colors = json.load(f)
-        self._colors = [Color(*c) for c in colors["rgb"]]
-
     def extractColors(self, seed: int = None, min_dist: int = 1):
         """Extract the colors from the image.
 
@@ -143,27 +133,29 @@ class PaletteExtractor:
         image_dx = int((new_width - self._im.width) / 2)
         image_dy = int((new_height - self._im.height) / 2)
 
-        # TODO refactor this
+        # bar sizes calculation
+        palette_width = int(new_width * palette_width_scl)
+        palette_height = int(new_height * palette_height_scl)
+        slice_width = int(palette_width / self._palette_size)
+        slice_height = int(palette_height / self._palette_size)
+        bar_height = int(slice_height * 0.75)
+        bar_width = int(palette_width * 0.5)
 
-        if position.value == "l" or position.value == "r":
-            # bar sizes calculation
-            palette_width = int(new_width * palette_width_scl)
-            palette_height = int(new_height * palette_height_scl)
-            slice_height = int(palette_height / self._palette_size)
-            bar_height = int(slice_height * 0.75)
-            bar_width = int(palette_width * 0.5)
-            # displacement
+        # displacement
+        if position.value in ["l", "r"]:
             bars_dx = int((palette_width - bar_width) / 2)
             bars_dy = int((slice_height - bar_height) / 2)
+        elif position.value in ["t", "b"]:
+            bars_dx = int((slice_width - bar_width) / 2)
+            bars_dy = int((palette_height - bar_height) / 2)
 
-            logging.info("Starting palette incorporation")
-            bars = Image.new(
-                "RGB", (palette_width, palette_height), color=background_color
-            )
-            draw = ImageDraw.Draw(bars)
+        logging.info("Starting palette incorporation")
+        bars = Image.new("RGB", (palette_width, palette_height), color=background_color)
+        draw = ImageDraw.Draw(bars)
+
+        if position.value in ["l", "r"]:
             # draw each bar
-            i = 0
-            for c in self._colors:
+            for i, c in enumerate(self._colors):
                 x_0 = bars_dx
                 y_0 = i * slice_height + bars_dy
                 x_1 = x_0 + bar_width
@@ -175,39 +167,16 @@ class PaletteExtractor:
                     outline=outline_color,
                     width=line_width,
                 )
-                i += 1
 
-            # left or right
             self._incorporated_palette = Image.new(
                 "RGB", (new_width + palette_width, new_height), color=background_color
             )
             palette_dy = int((new_height - palette_height) / 2)
             palette_dx = int(0.5 * image_dx)
-            if position.value == "l":
-                self._incorporated_palette.paste(
-                    self._im, (palette_width + image_dx, image_dy)
-                )
-                self._incorporated_palette.paste(bars, (palette_dx, palette_dy))
-            elif position.value == "r":
-                self._incorporated_palette.paste(self._im, (image_dx, image_dy))
-                self._incorporated_palette.paste(
-                    bars,
-                    (new_width - palette_width + palette_dx + image_dx, palette_dy),
-                )
 
-        if position.value == "t" or position.value == "b":
-            # displacement
-            bars_dx = int((slice_width - bar_width) / 2)
-            bars_dy = int((palette_height - bar_height) / 2)
-
-            logging.info("Starting palette incorporation")
-            bars = Image.new(
-                "RGB", (palette_width, palette_height), color=background_color
-            )
-            draw = ImageDraw.Draw(bars)
+        elif position.value in ["t", "b"]:
             # draw each bar
-            i = 0
-            for c in self._colors:
+            for i, c in enumerate(self._colors):
                 x_0 = i * slice_width + bars_dx
                 y_0 = bars_dy
                 x_1 = x_0 + bar_width
@@ -219,8 +188,6 @@ class PaletteExtractor:
                     outline=outline_color,
                     width=line_width,
                 )
-                i += 1
-
             self._incorporated_palette = Image.new(
                 "RGB",
                 (new_width, new_height + palette_height),
@@ -228,6 +195,21 @@ class PaletteExtractor:
             )
             palette_dx = int((new_width - palette_width) / 2)
             palette_dy = int(0.5 * image_dy)
+
+        if position.value in ["l", "r"]:
+            # left or right
+            if position.value == "l":
+                self._incorporated_palette.paste(
+                    self._im, (palette_width + image_dx, image_dy)
+                )
+                self._incorporated_palette.paste(bars, (palette_dx, palette_dy))
+            elif position.value == "r":
+                self._incorporated_palette.paste(self._im, (image_dx, image_dy))
+                self._incorporated_palette.paste(
+                    bars,
+                    (new_width - palette_width + palette_dx + image_dx, palette_dy),
+                )
+        elif position.value in ["t", "b"]:
             if position.value == "t":
                 self._incorporated_palette.paste(
                     self._im, (image_dx, image_dy + palette_height)

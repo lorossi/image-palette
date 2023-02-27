@@ -1,7 +1,16 @@
-from color import Color
+"""Terminal module."""
+
+from .color import Color
 
 
 def format_color(text: str, fore: Color = None, back: Color = None) -> str:
+    """Format text with foreground and background colors.
+
+    Args:
+        text (str): text to format
+        fore (Color, optional): foreground color. Defaults to None.
+        back (Color, optional): background color. Defaults to None.
+    """
     ESC = "\033["
 
     if fore is None:

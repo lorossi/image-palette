@@ -1,10 +1,12 @@
 from pathlib import Path
+
 from PIL import Image
+
 from imagepalette import PaletteExtractor
 
 
 def main():
-    path = Path(".").glob('*.jpg')
+    path = Path(".").glob("*.jpg")
     photos = [str(x) for x in path if x.is_file()]
 
     print(f"Starting extraction of {len(photos)} photos")
@@ -15,14 +17,24 @@ def main():
 
         p = PaletteExtractor()
         p.loadImage(photo, resize=True)
-        p.extractColors()
+        p.extractColours()
 
         if width > height:
             # horizontal image
-            p.incorporatePalette(output_scl=0.9, palette_height_scl=0.9, palette_width_scl=0.1, position="r")
+            p.incorporatePalette(
+                output_scl=0.9,
+                palette_height_scl=0.9,
+                palette_width_scl=0.1,
+                position="r",
+            )
         else:
             # vertical image
-            p.incorporatePalette(output_scl=0.9, palette_height_scl=0.1, palette_width_scl=0.9, position="b")
+            p.incorporatePalette(
+                output_scl=0.9,
+                palette_height_scl=0.1,
+                palette_width_scl=0.9,
+                position="b",
+            )
 
         p.saveIncorporatedPalette(folder="Editate/")
         print(f"{photo} done. {i+1}/{len(photos)}.")

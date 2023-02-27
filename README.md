@@ -10,15 +10,19 @@ Look down below for sample images or check my [Instagram profile](https://www.in
 ## Output
 
 *Input image*
+
 ![starry-night](output/starry-night.jpg)
 
 *Generated colour palette*
+
 ![starry-night-color-palette](output/starry-night-palette.png)
 
 *Palette integrated into original image*
+
 ![starry-night-with-incorporated-color-palette](output/starry-night-incorporated-palette.png)
 
 *Output as seen in the console*
+
 ![starry-night-with-incorporated-color-palette](output/console.png)
 
 ### JSON file with the colour palette

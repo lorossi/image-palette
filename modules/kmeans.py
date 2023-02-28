@@ -44,7 +44,7 @@ class KMeans:
         if random_seed is None:
             self._random_seed = int(datetime.now().timestamp())
 
-    def _toFixed(self, num: float, digits: int = 2) -> float:
+    def _toFixed(self, num: float, digits: int = 3) -> float:
         return float(f"{num:.{digits}f}")
 
     def fit(self, pixels: list[Color]) -> KMeans:
@@ -88,21 +88,19 @@ class KMeans:
             new_centroids = [self._centroid(cluster) for cluster in self._clusters]
             self._centroids = new_centroids
 
-            logging.info(f"Average distance: {self._toFixed(self.avg_dist,2)}")
+            logging.info(f"Average distance: {self._toFixed(self.avg_dist)}")
 
             if self.avg_dist < self._min_dist:
                 logging.info("Fitting completed.")
                 break
 
-            if last_avg_dist is not None and self._toFixed(
-                self.avg_dist
-            ) == self._toFixed(last_avg_dist):
+            if self._toFixed(self.avg_dist) == last_avg_dist:
                 unchanged_iterations += 1
                 if unchanged_iterations >= self._max_iterations:
                     logging.info("Fitting completed.")
                     break
 
-            last_avg_dist = self.avg_dist
+            last_avg_dist = self._toFixed(self.avg_dist)
             logging.info(f"Iteration {iteration} completed.")
             iteration += 1
 
